@@ -5,11 +5,12 @@ import {
   Separator,
   YStack,
 } from '@my/ui'
-
-import { useRouter } from 'solito/navigation'
+import { useLink } from 'solito/navigation'
 
 export function HomeScreen() {
-  const router = useRouter()
+  const linkProps = useLink({
+    href: `/list`,
+  })
 
   return (
     <YStack
@@ -37,7 +38,7 @@ export function HomeScreen() {
         <Separator />
       </YStack>
 
-      <Button onPress={ () => router.push('/list-note') }>See and create a Note!</Button>
+      <Button {...linkProps}>See and create a Note!</Button>
 
     </YStack>
   )

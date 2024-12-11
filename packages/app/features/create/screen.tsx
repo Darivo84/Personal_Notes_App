@@ -1,37 +1,41 @@
 import { YStack, Input, Button, Text } from 'tamagui';
 import { useEffect, useState } from 'react';
-import { useRouter } from 'solito/router';
+import { getItem, setItem} from '../../utils/storage';
+import { useRouter } from 'solito/navigation';
 
-const CreateNoteScreen = () => {
+export function CreateNotes() {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
-  const { push } = useRouter();
   const [noteId, setNoteId] = useState(null);
+  const { push } = useRouter();
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const id = new URLSearchParams(window.location.search).get('id');
+    const loadNoteData = async () => {
+      const isWeb = typeof window !== 'undefined';
+      const id = isWeb ? new URLSearchParams(window.location.search).get('id') : null;
       setNoteId(id);
 
       if (id) {
-        const savedNotes = JSON.parse(localStorage.getItem('notes') || '[]');
+        const savedNotes = await getItem('notes');
         const noteToEdit = savedNotes.find(note => note.id === parseInt(id));
         if (noteToEdit) {
           setTitle(noteToEdit.title);
           setContent(noteToEdit.content);
         }
       }
-    }
+    };
+
+    loadNoteData();
   }, []);
 
-  const handleSaveNote = () => {
-    const savedNotes = JSON.parse(localStorage.getItem('notes') || '[]');
+  const handleSaveNote = async () => {
+    const savedNotes = await getItem('notes');
 
     if (noteId) {
       const updatedNotes = savedNotes.map(note =>
         note.id === parseInt(noteId) ? { ...note, title, content } : note
       );
-      localStorage.setItem('notes', JSON.stringify(updatedNotes));
+      await setItem('notes', updatedNotes);
     } else {
       const newNote = {
         id: Date.now(),
@@ -39,26 +43,25 @@ const CreateNoteScreen = () => {
         content,
       };
       const updatedNotes = [...savedNotes, newNote];
-      localStorage.setItem('notes', JSON.stringify(updatedNotes));
+      await setItem('notes', updatedNotes);
     }
 
-    push('/list-note');
+    push('/list');
   };
 
   return (
     <YStack space padding="$4">
       <Text fontSize="$6" marginBottom="$4">{noteId ? 'Edit Note' : 'Create a New Note'}</Text>
-      <Input placeholder="Title" value={title} onChangeText={setTitle} marginBottom="$4" />
+      <Input data-testid="title-input" placeholder="Title" value={title} onChangeText={setTitle} marginBottom="$4" />
       <Input
+        data-testid="content-input"
         placeholder="Content"
         value={content}
         onChangeText={setContent}
         multiline
         marginBottom="$4"
       />
-      <Button onPress={handleSaveNote}>{noteId ? 'Update Note' : 'Save Note'}</Button>
+      <Button data-testid="save-note-button" onPress={handleSaveNote}>{noteId ? 'Update Note' : 'Save Note'}</Button>
     </YStack>
-  );
-};
-
-export default CreateNoteScreen;
+  )
+}

@@ -1,35 +1,25 @@
-import { Stack } from 'expo-router'
-import { YStack, Card, Text, Button, Input, XStack, } from 'tamagui';
+import { YStack, Card, Text, Button, Input, XStack } from 'tamagui';
 import { useState, useEffect } from 'react';
-import { router } from 'expo-router';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getItem, setItem } from '../../utils/storage'
+import { useRouter } from 'solito/navigation'
 
-export default function listNote() {
+export function ListNotes() {
   const [notes, setNotes] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const { push } = useRouter();
 
   useEffect(() => {
-    const loadNotes = async () => {
-      try {
-        const savedNotes = await AsyncStorage.getItem('notes');
-        if (savedNotes) {
-          setNotes(JSON.parse(savedNotes));
-        }
-      } catch (error) {
-        console.error('Failed to load notes:', error);
-      }
+    const fetchNotes = async () => {
+      const savedNotes = await getItem('notes');
+      setNotes(savedNotes);
     };
-    loadNotes();
+    fetchNotes();
   }, []);
 
   const handleDeleteNote = async (noteId) => {
     const updatedNotes = notes.filter(note => note.id !== noteId);
     setNotes(updatedNotes);
-    try {
-      await AsyncStorage.setItem('notes', JSON.stringify(updatedNotes));
-    } catch (error) {
-      console.error('Failed to delete note:', error);
-    }
+    await setItem('notes', updatedNotes);
   };
 
   const filteredNotes = notes.filter(note =>
@@ -37,12 +27,10 @@ export default function listNote() {
   );
 
   return (
-    <>
-    <Stack.Screen options={{ title: 'List Notes' }}  />
     <YStack space padding="$4">
-      <Button marginBottom="$4" onPress={() => router.push('/create-note')}>Add Note</Button>
-      
+      <Button data-testid="add-note-button" marginBottom="$4" onPress={() => push('/create')}>Add Note</Button>
       <Input
+        data-testid="search-input"
         placeholder="Search notes by title..."
         value={searchQuery}
         onChangeText={setSearchQuery}
@@ -50,17 +38,19 @@ export default function listNote() {
       />
       {filteredNotes.length > 0 ? (
         filteredNotes.map(note => (
-          <Card key={note.id} marginBottom="$4" padding="$4">
+          <Card key={note.id} marginBottom="$4" padding="$4" data-testid="note-card">
             <XStack justifyContent="space-between" alignItems="center" marginBottom="$2">
-              <Text fontWeight="bold">{note.title}</Text>
+              <Text data-testid="note-title" fontWeight="bold">{note.title}</Text>
               <XStack space="$2">
                 <Button
+                  data-testid="edit-note-button"
                   size="$2"
-                  onPress={() => router.push(`/create-note?id=${note.id}`)}
+                  onPress={() => push(`/create?id=${note.id}`)}
                 >
                   Edit
                 </Button>
                 <Button
+                  data-testid="delete-note-button"
                   size="$2"
                   onPress={() => handleDeleteNote(note.id)}
                   color="red"
@@ -78,8 +68,6 @@ export default function listNote() {
       ) : (
         <Text>No notes available. Click 'Add Note' to create one!</Text>
       )}
-      <Button marginBottom="$4" onPress={() => router.push('/')}>Home</Button>
     </YStack>
-    </>
   )
 }

@@ -31,6 +31,7 @@ create responsive and functional interfaces using Tamagui and Solito.
 - Expo SDK
 - Next.js
 - Expo Router
+- Cypress for testing
 
 ## 🗂 Folder layout
 
@@ -44,6 +45,7 @@ The main apps are:
 - Install dependencies in root directory: `yarn`
 
 - Next.js local dev: `yarn web`
+- For testing: `npx cypress open`
 
 To run with optimizer on in dev mode (just for testing, it's faster to leave it off): `yarn web:extract`. To build for production `yarn web:prod`.
 
